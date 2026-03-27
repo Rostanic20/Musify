@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="musify_auth_prefs.xml"/>
+        <exclude domain="database" path="musify_cache.db"/>
+    </cloud-backup>
+</data-extraction-rules>

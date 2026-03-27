@@ -1,0 +1,21 @@
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+backend/build/
+backend/.gradle/
+frontend/.gradle/
+frontend/build/
+frontend/app/build/
+frontend/local.properties
+backend/local.properties
+
+# Secrets
+.env
+*.keystore
+*.jks

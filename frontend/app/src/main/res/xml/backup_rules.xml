@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <exclude domain="sharedpref" path="musify_auth_prefs.xml"/>
+    <exclude domain="database" path="musify_cache.db"/>
+    <exclude domain="cache" />
+    <exclude domain="external" />
+</full-backup-content>

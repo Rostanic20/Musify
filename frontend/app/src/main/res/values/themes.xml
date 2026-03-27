@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme -->
+    <style name="Theme.Musify" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/musify_background</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/musify_background</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        
+        <!-- Window background -->
+        <item name="android:windowBackground">@color/musify_background</item>
+    </style>
+    
+    <!-- Splash Screen Theme -->
+    <style name="Theme.Musify.SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/musify_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Musify</item>
+    </style>
+</resources>
