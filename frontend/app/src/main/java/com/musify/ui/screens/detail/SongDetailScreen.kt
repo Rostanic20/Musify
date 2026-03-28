@@ -216,7 +216,7 @@ private fun SongDetailContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedButton(
-            onClick = { viewModel.addToQueue() },
+            onClick = onAddToQueue,
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
