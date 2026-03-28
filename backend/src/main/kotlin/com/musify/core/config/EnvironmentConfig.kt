@@ -56,10 +56,10 @@ object EnvironmentConfig {
     val API_BASE_URL: String get() = getEnv("API_BASE_URL", "http://localhost:8080")
 
     // Database Configuration
-    val DATABASE_DRIVER: String get() = getEnv("DATABASE_DRIVER", "org.h2.Driver")
-    val DATABASE_URL: String get() = getEnv("DATABASE_URL", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1")
-    val DATABASE_USER: String? get() = getEnvOrNull("DATABASE_USER")
-    val DATABASE_PASSWORD: String? get() = getEnvOrNull("DATABASE_PASSWORD")
+    val DATABASE_DRIVER: String get() = getEnv("DATABASE_DRIVER", "org.postgresql.Driver")
+    val DATABASE_URL: String get() = getEnv("DATABASE_URL", "jdbc:postgresql://localhost:5432/musify")
+    val DATABASE_USER: String? get() = getEnvOrNull("DATABASE_USER") ?: "musify_user"
+    val DATABASE_PASSWORD: String? get() = getEnvOrNull("DATABASE_PASSWORD") ?: "musify_pass"
     val DATABASE_MAX_POOL_SIZE: Int get() = getEnv("DATABASE_MAX_POOL_SIZE", "30").toInt()
     val DATABASE_MIN_IDLE: Int get() = getEnv("DATABASE_MIN_IDLE", "5").toInt()
     val DATABASE_CONNECTION_TIMEOUT_MS: Long get() = getEnv("DATABASE_CONNECTION_TIMEOUT_MS", "30000").toLong()

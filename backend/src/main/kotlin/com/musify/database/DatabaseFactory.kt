@@ -40,8 +40,7 @@ object DatabaseFactory {
         
         // Create schema for development/testing
         transaction(_database) {
-            if (EnvironmentConfig.ENVIRONMENT != "production" || 
-                EnvironmentConfig.DATABASE_URL.contains("h2")) {
+            if (EnvironmentConfig.ENVIRONMENT != "production") {
                 
                 println("INFO: Creating database schema...")
                 SchemaUtils.create(

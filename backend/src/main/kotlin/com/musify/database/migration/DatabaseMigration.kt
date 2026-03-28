@@ -15,11 +15,6 @@ object DatabaseMigration {
      * Run database migrations
      */
     fun migrate() {
-        if (EnvironmentConfig.DATABASE_URL.contains("h2:mem")) {
-            println("Skipping migrations for in-memory H2 database")
-            return
-        }
-        
         try {
             val flyway = Flyway.configure()
                 .dataSource(
