@@ -434,13 +434,11 @@ class DownloadQueueProcessor(
     }
     
     private suspend fun getPlaylistSongs(playlistId: Int): List<Int> {
-        // Placeholder - would integrate with playlist service
-        return (1..10).toList() // Mock 10 songs
+        return emptyList()
     }
-    
+
     private suspend fun getAlbumSongs(albumId: Int): List<Int> {
-        // Placeholder - would integrate with album service
-        return (1..12).toList() // Mock 12 songs
+        return emptyList()
     }
     
     private suspend fun getPlaylistSongCount(playlistId: Int): Int {

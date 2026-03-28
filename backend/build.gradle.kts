@@ -145,5 +145,6 @@ dependencies {
     testImplementation("io.insert-koin:koin-test:3.5.3")
     testImplementation("io.insert-koin:koin-test-junit5:3.5.3")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("com.h2database:h2:2.2.224")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

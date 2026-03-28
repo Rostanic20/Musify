@@ -111,10 +111,6 @@ val SecurityHeaders = createApplicationPlugin(name = "SecurityHeaders") {
                 if (EnvironmentConfig.IS_PRODUCTION) {
                     append("upgrade-insecure-requests; ")
                 }
-                
-                // Report violations (optional)
-                // append("report-uri /api/csp-report; ")
-                // append("report-to csp-endpoint")
             }
             
             append("Content-Security-Policy", cspDirectives)

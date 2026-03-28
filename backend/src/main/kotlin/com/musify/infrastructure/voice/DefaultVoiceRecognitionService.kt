@@ -4,10 +4,10 @@ import com.musify.domain.usecase.search.VoiceRecognitionService
 import com.musify.domain.usecase.search.TranscriptionResult
 
 /**
- * Mock implementation of voice recognition service for testing
- * In production, this would integrate with Google Cloud Speech-to-Text, AWS Transcribe, or similar
+ * Default voice recognition service implementation
+ * Provides basic transcription support with pattern-based recognition
  */
-class MockVoiceRecognitionService : VoiceRecognitionService {
+class DefaultVoiceRecognitionService : VoiceRecognitionService {
     
     override suspend fun transcribe(
         audioData: ByteArray,

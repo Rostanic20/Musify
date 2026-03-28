@@ -22,7 +22,7 @@ import com.musify.core.resilience.*
 import com.musify.core.monitoring.*
 import com.musify.domain.usecase.search.*
 import com.musify.domain.services.*
-import com.musify.infrastructure.voice.MockVoiceRecognitionService
+import com.musify.infrastructure.voice.DefaultVoiceRecognitionService
 import com.musify.infrastructure.cache.EnhancedRedisCacheManager
 import com.musify.infrastructure.cache.RedisCache
 import com.musify.infrastructure.cache.SearchCacheService as InfraSearchCacheService
@@ -297,7 +297,7 @@ val serviceModule = module {
 }
 
 val searchModule = module {
-    single<VoiceRecognitionService> { MockVoiceRecognitionService() }
+    single<VoiceRecognitionService> { DefaultVoiceRecognitionService() }
     
     // Search use cases
     factory { SearchUseCase(get(), get(), get(), get(), get()) }

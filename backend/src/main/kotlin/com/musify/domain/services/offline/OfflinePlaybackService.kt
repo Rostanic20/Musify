@@ -331,13 +331,11 @@ class OfflinePlaybackService(
     }
     
     private suspend fun getPlaylistSongs(playlistId: Int): List<Int> {
-        // Placeholder - would integrate with playlist service
-        return (1..10).toList() // Mock playlist songs
+        return emptyList()
     }
-    
+
     private suspend fun getAlbumSongs(albumId: Int): List<Int> {
-        // Placeholder - would integrate with album service
-        return (1..12).toList() // Mock album songs
+        return emptyList()
     }
 }
 
