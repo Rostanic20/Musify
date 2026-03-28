@@ -194,10 +194,6 @@ fun SettingsScreen(
                     leadingContent = {
                         Icon(Icons.Default.Description, contentDescription = null)
                     },
-                    trailingContent = {
-                        Icon(Icons.Default.ChevronRight, contentDescription = null)
-                    },
-                    modifier = Modifier.clickable { }
                 )
             }
 

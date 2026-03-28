@@ -155,9 +155,11 @@ fun ArtistSongsScreen(
                                     }
                                 },
                                 trailingContent = {
-                                    IconButton(onClick = { }) {
-                                        Icon(Icons.Default.MoreVert, contentDescription = "More options")
-                                    }
+                                    Text(
+                                        text = "${song.playCount} plays",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             )
                         }

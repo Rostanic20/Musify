@@ -206,41 +206,60 @@ private fun ArtistMainScreen(
                 )
             }
             composable("artist_analytics") {
+                @OptIn(ExperimentalMaterial3Api::class)
                 Scaffold(
                     topBar = {
-                        @OptIn(ExperimentalMaterial3Api::class)
                         TopAppBar(title = { Text("Analytics") })
                     }
                 ) { innerPadding ->
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.Center
+                            .padding(innerPadding)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Analytics,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Analytics",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Coming Soon",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                textAlign = TextAlign.Center
-                            )
+                            Card(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("0", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                    Text("Total Plays", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            Card(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.MusicNote, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("0", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                    Text("Songs", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Card(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.People, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("0", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                    Text("Followers", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            Card(modifier = Modifier.weight(1f)) {
+                                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("0", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                    Text("Likes", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
                         }
                     }
                 }
