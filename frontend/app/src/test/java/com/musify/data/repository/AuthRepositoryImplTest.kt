@@ -75,7 +75,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login success returns AuthResult with tokens`() = runTest {
+    fun loginSuccessReturnsAuthResultWithTokens() = runTest {
         coEvery { apiService.login(any()) } returns Response.success(authResponse)
 
         val result = repository.login("testuser", "password123")
@@ -89,7 +89,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login with 2FA required returns requires2FA true`() = runTest {
+    fun loginWith2FARequiredReturnsRequires2FATrue() = runTest {
         val twoFaResponse = authResponse.copy(requires2FA = true)
         coEvery { apiService.login(any()) } returns Response.success(twoFaResponse)
 
@@ -100,7 +100,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login with invalid credentials returns InvalidCredentialsException`() = runTest {
+    fun loginWithInvalidCredentialsReturnsInvalidCredentialsException() = runTest {
         coEvery { apiService.login(any()) } returns
             Response.error(401, """{"error":"Invalid credentials"}""".toResponseBody())
 
@@ -111,7 +111,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login with network error returns NetworkException`() = runTest {
+    fun loginWithNetworkErrorReturnsNetworkException() = runTest {
         coEvery { apiService.login(any()) } throws IOException("Connection failed")
 
         val result = repository.login("testuser", "password123")
@@ -121,7 +121,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login with no internet returns NetworkException with message`() = runTest {
+    fun loginWithNoInternetReturnsNetworkExceptionWithMessage() = runTest {
         coEvery { apiService.login(any()) } throws UnknownHostException("Unable to resolve host")
 
         val result = repository.login("testuser", "password123")
@@ -132,7 +132,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login with timeout returns TimeoutException`() = runTest {
+    fun loginWithTimeoutReturnsTimeoutException() = runTest {
         coEvery { apiService.login(any()) } throws SocketTimeoutException("Connection timed out")
 
         val result = repository.login("testuser", "password123")
@@ -142,7 +142,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `register success returns AuthResult`() = runTest {
+    fun registerSuccessReturnsAuthResult() = runTest {
         coEvery { apiService.register(any()) } returns Response.success(authResponse)
 
         val result = repository.register(
@@ -159,7 +159,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `register with existing email returns EmailAlreadyExistsException`() = runTest {
+    fun registerWithExistingEmailReturnsEmailAlreadyExistsException() = runTest {
         coEvery { apiService.register(any()) } returns Response.error(
             409,
             """{"error":"email already registered"}""".toResponseBody()
@@ -178,7 +178,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `register with existing username returns UsernameAlreadyExistsException`() = runTest {
+    fun registerWithExistingUsernameReturnsUsernameAlreadyExistsException() = runTest {
         coEvery { apiService.register(any()) } returns Response.error(
             409,
             """{"error":"username already taken"}""".toResponseBody()
@@ -197,7 +197,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `register with validation error returns ValidationException`() = runTest {
+    fun registerWithValidationErrorReturnsValidationException() = runTest {
         coEvery { apiService.register(any()) } returns Response.error(
             400,
             """{"error":"Password too short"}""".toResponseBody()
@@ -217,7 +217,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `logout always succeeds even on API error`() = runTest {
+    fun logoutAlwaysSucceedsEvenOnAPIError() = runTest {
         coEvery { apiService.logout() } returns
             Response.error(500, "Error".toResponseBody())
 
@@ -227,7 +227,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `logout succeeds on network failure`() = runTest {
+    fun logoutSucceedsOnNetworkFailure() = runTest {
         coEvery { apiService.logout() } throws IOException("No connection")
 
         val result = repository.logout()
@@ -236,7 +236,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `getCurrentUser returns mapped user on success`() = runTest {
+    fun getCurrentUserReturnsMappedUserOnSuccess() = runTest {
         coEvery { apiService.getCurrentUser() } returns Response.success(dataUser)
 
         val result = repository.getCurrentUser()
@@ -250,7 +250,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `getCurrentUser returns UnauthorizedException on 401`() = runTest {
+    fun getCurrentUserReturnsUnauthorizedExceptionOn401() = runTest {
         coEvery { apiService.getCurrentUser() } returns
             Response.error(401, "Unauthorized".toResponseBody())
 
@@ -261,7 +261,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `getCurrentUser returns ServerException on 500`() = runTest {
+    fun getCurrentUserReturnsServerExceptionOn500() = runTest {
         coEvery { apiService.getCurrentUser() } returns
             Response.error(500, "Server error".toResponseBody())
 
@@ -272,7 +272,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `refreshToken success returns new AuthResult`() = runTest {
+    fun refreshTokenSuccessReturnsNewAuthResult() = runTest {
         val newAuthResponse = authResponse.copy(
             token = "new-access-token",
             refreshToken = "new-refresh-token"
@@ -288,7 +288,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `refreshToken failure returns SessionExpiredException`() = runTest {
+    fun refreshTokenFailureReturnsSessionExpiredException() = runTest {
         coEvery { apiService.refreshToken(any()) } returns
             Response.error(401, "Expired".toResponseBody())
 
@@ -299,7 +299,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `login with empty response body returns ServerException`() = runTest {
+    fun loginWithEmptyResponseBodyReturnsServerException() = runTest {
         coEvery { apiService.login(any()) } returns Response.success(null)
 
         val result = repository.login("testuser", "password123")
@@ -309,7 +309,7 @@ class AuthRepositoryImplTest {
     }
 
     @Test
-    fun `rate limit error returns ValidationException`() = runTest {
+    fun rateLimitErrorReturnsValidationException() = runTest {
         coEvery { apiService.login(any()) } returns Response.error(
             429,
             """{"error":"Rate limited"}""".toResponseBody()

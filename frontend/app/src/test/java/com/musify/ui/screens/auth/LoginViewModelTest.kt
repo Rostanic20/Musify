@@ -60,7 +60,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with valid credentials sets isLoginSuccessful to true`() = runTest {
+    fun loginWithValidCredentialsSetsIsLoginSuccessfulToTrue() = runTest {
         val authResult = AuthResult(
             user = testUser,
             accessToken = "access-token-123",
@@ -79,7 +79,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with valid credentials saves tokens`() = runTest {
+    fun loginWithValidCredentialsSavesTokens() = runTest {
         val authResult = AuthResult(
             user = testUser,
             accessToken = "access-token-123",
@@ -94,7 +94,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with invalid credentials sets error message`() = runTest {
+    fun loginWithInvalidCredentialsSetsErrorMessage() = runTest {
         coEvery { loginUseCase(any(), any(), any()) } returns
             Result.failure(InvalidCredentialsException())
 
@@ -107,7 +107,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with empty username sets validation error`() = runTest {
+    fun loginWithEmptyUsernameSetsValidationError() = runTest {
         coEvery { loginUseCase(any(), any(), any()) } returns
             Result.failure(ValidationException("Username cannot be empty"))
 
@@ -120,7 +120,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with empty password sets validation error`() = runTest {
+    fun loginWithEmptyPasswordSetsValidationError() = runTest {
         coEvery { loginUseCase(any(), any(), any()) } returns
             Result.failure(ValidationException("Password cannot be empty"))
 
@@ -133,7 +133,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login requiring 2FA sets requires2FA to true`() = runTest {
+    fun loginRequiring2FASetsRequires2FAToTrue() = runTest {
         val authResult = AuthResult(
             user = testUser,
             accessToken = "",
@@ -151,7 +151,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `loginWith2FA success sets isLoginSuccessful to true`() = runTest {
+    fun loginWith2FASuccessSetsIsLoginSuccessfulToTrue() = runTest {
         val authResult = AuthResult(
             user = testUser,
             accessToken = "access-token-2fa",
@@ -170,7 +170,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `loginWith2FA with invalid code sets error message`() = runTest {
+    fun loginWith2FAWithInvalidCodeSetsErrorMessage() = runTest {
         coEvery { loginUseCase(any(), any(), any()) } returns
             Result.failure(Exception("Invalid 2FA code"))
 
@@ -183,7 +183,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login clears previous error before making request`() = runTest {
+    fun loginClearsPreviousErrorBeforeMakingRequest() = runTest {
         coEvery { loginUseCase(any(), any(), any()) } returns
             Result.failure(InvalidCredentialsException())
 
@@ -203,7 +203,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `initial state is default LoginState`() {
+    fun initialStateIsDefaultLoginState() {
         val state = viewModel.state.value
         assertFalse(state.isLoading)
         assertFalse(state.isLoginSuccessful)

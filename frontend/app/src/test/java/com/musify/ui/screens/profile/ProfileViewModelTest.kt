@@ -59,7 +59,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `init loads current user successfully`() = runTest {
+    fun initLoadsCurrentUserSuccessfully() = runTest {
         coEvery { getCurrentUserUseCase() } returns Result.success(testUser)
 
         val viewModel = createViewModel()
@@ -72,7 +72,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `init handles user load failure`() = runTest {
+    fun initHandlesUserLoadFailure() = runTest {
         coEvery { getCurrentUserUseCase() } returns Result.failure(NetworkException("No connection"))
 
         val viewModel = createViewModel()
@@ -83,7 +83,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `init handles unauthorized error`() = runTest {
+    fun initHandlesUnauthorizedError() = runTest {
         coEvery { getCurrentUserUseCase() } returns Result.failure(UnauthorizedException())
 
         val viewModel = createViewModel()
@@ -94,7 +94,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `logout clears tokens and sets isLoggedOut`() = runTest {
+    fun logoutClearsTokensAndSetsIsLoggedOut() = runTest {
         coEvery { getCurrentUserUseCase() } returns Result.success(testUser)
         coEvery { logoutUseCase() } returns Result.success(Unit)
 
@@ -107,7 +107,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `logout clears tokens even on failure`() = runTest {
+    fun logoutClearsTokensEvenOnFailure() = runTest {
         coEvery { getCurrentUserUseCase() } returns Result.success(testUser)
         coEvery { logoutUseCase() } returns Result.failure(NetworkException("error"))
 
@@ -120,7 +120,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `loading state is false after init`() = runTest {
+    fun loadingStateIsFalseAfterInit() = runTest {
         coEvery { getCurrentUserUseCase() } returns Result.success(testUser)
 
         val viewModel = createViewModel()
@@ -129,7 +129,7 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `initial state before init loads has no user`() = runTest {
+    fun initialStateBeforeInitLoadsHasNoUser() = runTest {
         coEvery { getCurrentUserUseCase() } returns Result.success(null)
 
         val viewModel = createViewModel()

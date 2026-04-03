@@ -43,7 +43,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `trending data loads on init`() = runTest(testDispatcher) {
+    fun trendingDataLoadsOnInit() = runTest(testDispatcher) {
         val trendingResponse = mapOf<String, Any>(
             "songs" to listOf(
                 mapOf("id" to 1.0, "title" to "Trending Song", "artistName" to "Artist", "duration" to 200.0)
@@ -63,7 +63,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `trending load failure sets error message`() = runTest(testDispatcher) {
+    fun trendingLoadFailureSetsErrorMessage() = runTest(testDispatcher) {
         coEvery { apiService.getTrending(any(), any()) } throws IOException("No connection")
 
         val viewModel = createViewModel()
@@ -73,7 +73,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `search with query returns results`() = runTest(testDispatcher) {
+    fun searchWithQueryReturnsResults() = runTest(testDispatcher) {
         coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
 
         val searchResponse = mapOf<String, Any>(
@@ -99,7 +99,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `search with empty query clears results and shows trending`() = runTest(testDispatcher) {
+    fun searchWithEmptyQueryClearsResultsAndShowsTrending() = runTest(testDispatcher) {
         coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
         coEvery { apiService.search(any()) } returns Response.success(emptyMap())
 
@@ -122,7 +122,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `search network failure sets error message`() = runTest(testDispatcher) {
+    fun searchNetworkFailureSetsErrorMessage() = runTest(testDispatcher) {
         coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
         coEvery { apiService.search(any()) } throws IOException("Network error")
 
@@ -139,7 +139,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `clearSearch resets all search state`() = runTest(testDispatcher) {
+    fun clearSearchResetsAllSearchState() = runTest(testDispatcher) {
         coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
         coEvery { apiService.search(any()) } returns Response.success(
             mapOf("songs" to emptyList<Any>(), "artists" to emptyList<Any>(), "albums" to emptyList<Any>())
@@ -165,7 +165,7 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `debounce prevents rapid search calls`() = runTest(testDispatcher) {
+    fun debouncePreventsRapidSearchCalls() = runTest(testDispatcher) {
         coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
         coEvery { apiService.search(any()) } returns Response.success(
             mapOf("songs" to emptyList<Any>(), "artists" to emptyList<Any>(), "albums" to emptyList<Any>())

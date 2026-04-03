@@ -83,7 +83,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getSongs returns mapped domain songs on success`() = runTest {
+    fun getSongsReturnsMappedDomainSongsOnSuccess() = runTest {
         coEvery { apiService.getSongs(any(), any()) } returns Response.success(listOf(dataSong))
 
         val result = repository.getSongs()
@@ -97,7 +97,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getSongs returns failure on API error`() = runTest {
+    fun getSongsReturnsFailureOnAPIError() = runTest {
         coEvery { apiService.getSongs(any(), any()) } returns
             Response.error(500, "Server Error".toResponseBody())
 
@@ -108,7 +108,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getSongs returns failure on network error`() = runTest {
+    fun getSongsReturnsFailureOnNetworkError() = runTest {
         coEvery { apiService.getSongs(any(), any()) } throws IOException("No internet")
 
         val result = repository.getSongs()
@@ -118,7 +118,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getSongs returns empty list when body is null`() = runTest {
+    fun getSongsReturnsEmptyListWhenBodyIsNull() = runTest {
         coEvery { apiService.getSongs(any(), any()) } returns Response.success(null)
 
         val result = repository.getSongs()
@@ -128,7 +128,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getRecentlyPlayed calls listening history API`() = runTest {
+    fun getRecentlyPlayedCallsListeningHistoryAPI() = runTest {
         coEvery { apiService.getCurrentUser() } returns Response.success(dataUser)
         coEvery { apiService.getListeningHistory(1, 10) } returns Response.success(listOf(dataSong))
 
@@ -139,7 +139,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getRecentlyPlayed falls back to getSongs on user fetch failure`() = runTest {
+    fun getRecentlyPlayedFallsBackToGetSongsOnUserFetchFailure() = runTest {
         coEvery { apiService.getCurrentUser() } returns
             Response.error(401, "Unauthorized".toResponseBody())
         coEvery { apiService.getSongs(limit = 10) } returns Response.success(listOf(dataSong))
@@ -151,7 +151,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `searchSongs returns parsed results on success`() = runTest {
+    fun searchSongsReturnsParsedResultsOnSuccess() = runTest {
         val searchBody = mapOf<String, Any>(
             "songs" to listOf(
                 mapOf(
@@ -178,7 +178,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `searchSongs returns failure on API error`() = runTest {
+    fun searchSongsReturnsFailureOnAPIError() = runTest {
         coEvery { apiService.search(any()) } returns
             Response.error(500, "Error".toResponseBody())
 
@@ -189,7 +189,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `toggleFavorite returns correct state on success`() = runTest {
+    fun toggleFavoriteReturnsCorrectStateOnSuccess() = runTest {
         coEvery { apiService.toggleFavorite(1) } returns
             Response.success(mapOf("isFavorite" to true))
 
@@ -200,7 +200,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `toggleFavorite returns false when unfavoriting`() = runTest {
+    fun toggleFavoriteReturnsFalseWhenUnfavoriting() = runTest {
         coEvery { apiService.toggleFavorite(1) } returns
             Response.success(mapOf("isFavorite" to false))
 
@@ -211,7 +211,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `toggleFavorite returns failure on API error`() = runTest {
+    fun toggleFavoriteReturnsFailureOnAPIError() = runTest {
         coEvery { apiService.toggleFavorite(any()) } returns
             Response.error(500, "Error".toResponseBody())
 
@@ -222,7 +222,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getRecommendations returns mapped songs on success`() = runTest {
+    fun getRecommendationsReturnsMappedSongsOnSuccess() = runTest {
         coEvery { apiService.getRecommendations(any(), any(), any()) } returns
             Response.success(listOf(dataSong))
 
@@ -233,7 +233,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getPopularAlbums returns mapped albums on success`() = runTest {
+    fun getPopularAlbumsReturnsMappedAlbumsOnSuccess() = runTest {
         coEvery { apiService.getAlbums(sort = "popular", limit = any(), offset = any()) } returns
             Response.success(listOf(dataAlbum))
 
@@ -247,7 +247,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getNewReleases returns mapped albums on success`() = runTest {
+    fun getNewReleasesReturnsMappedAlbumsOnSuccess() = runTest {
         coEvery { apiService.getAlbums(sort = "newest", limit = any(), offset = any()) } returns
             Response.success(listOf(dataAlbum))
 
@@ -258,7 +258,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getSongById returns 404 as SongNotFoundException`() = runTest {
+    fun getSongByIdReturns404AsSongNotFoundException() = runTest {
         coEvery { apiService.getSongDetails(999) } returns
             Response.error(404, "Not Found".toResponseBody())
 
@@ -269,7 +269,7 @@ class MusicRepositoryImplTest {
     }
 
     @Test
-    fun `getArtistSongs returns mapped songs on success`() = runTest {
+    fun getArtistSongsReturnsMappedSongsOnSuccess() = runTest {
         coEvery { apiService.getArtistSongs(any(), any(), any()) } returns
             Response.success(listOf(dataSong))
 

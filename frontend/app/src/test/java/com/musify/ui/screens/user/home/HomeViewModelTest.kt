@@ -102,7 +102,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `init loads all content successfully`() = runTest {
+    fun initLoadsAllContentSuccessfully() = runTest {
         val songs = listOf(testSong)
         val albums = listOf(testAlbum)
         val playlists = listOf(testPlaylist)
@@ -126,7 +126,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `init handles API errors gracefully with empty lists`() = runTest {
+    fun initHandlesAPIErrorsGracefullyWithEmptyLists() = runTest {
         coEvery { getRecentlyPlayedUseCase(any()) } returns Result.failure(NetworkException("Network error"))
         coEvery { getRecommendationsUseCase(any()) } returns Result.failure(NetworkException("Network error"))
         coEvery { getPopularAlbumsUseCase(any()) } returns Result.success(emptyList())
@@ -143,7 +143,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `loading state is false after init completes`() = runTest {
+    fun loadingStateIsFalseAfterInitCompletes() = runTest {
         coEvery { getRecentlyPlayedUseCase(any()) } returns Result.success(emptyList())
         coEvery { getRecommendationsUseCase(any()) } returns Result.success(emptyList())
         coEvery { getPopularAlbumsUseCase(any()) } returns Result.success(emptyList())
@@ -156,7 +156,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `empty data results in empty lists not nulls`() = runTest {
+    fun emptyDataResultsInEmptyListsNotNulls() = runTest {
         coEvery { getRecentlyPlayedUseCase(any()) } returns Result.success(emptyList())
         coEvery { getRecommendationsUseCase(any()) } returns Result.success(emptyList())
         coEvery { getPopularAlbumsUseCase(any()) } returns Result.success(emptyList())
@@ -175,7 +175,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `partial failure sets error message but still loads successful data`() = runTest {
+    fun partialFailureSetsErrorMessageButStillLoadsSuccessfulData() = runTest {
         val songs = listOf(testSong)
         val albums = listOf(testAlbum)
 
@@ -195,7 +195,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `refresh reloads all content`() = runTest {
+    fun refreshReloadsAllContent() = runTest {
         coEvery { getRecentlyPlayedUseCase(any()) } returns Result.success(emptyList())
         coEvery { getRecommendationsUseCase(any()) } returns Result.success(emptyList())
         coEvery { getPopularAlbumsUseCase(any()) } returns Result.success(emptyList())
@@ -216,7 +216,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `no error message when all requests succeed`() = runTest {
+    fun noErrorMessageWhenAllRequestsSucceed() = runTest {
         coEvery { getRecentlyPlayedUseCase(any()) } returns Result.success(listOf(testSong))
         coEvery { getRecommendationsUseCase(any()) } returns Result.success(listOf(testSong))
         coEvery { getPopularAlbumsUseCase(any()) } returns Result.success(listOf(testAlbum))

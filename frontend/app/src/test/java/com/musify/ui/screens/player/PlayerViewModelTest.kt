@@ -52,63 +52,63 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `play delegates to MusicPlayerManager`() {
+    fun playDelegatesToMusicPlayerManager() {
         viewModel.play(testSong)
 
         verify { musicPlayerManager.play(testSong) }
     }
 
     @Test
-    fun `pause delegates to MusicPlayerManager`() {
+    fun pauseDelegatesToMusicPlayerManager() {
         viewModel.pause()
 
         verify { musicPlayerManager.pause() }
     }
 
     @Test
-    fun `resume delegates to MusicPlayerManager`() {
+    fun resumeDelegatesToMusicPlayerManager() {
         viewModel.resume()
 
         verify { musicPlayerManager.resume() }
     }
 
     @Test
-    fun `next delegates to MusicPlayerManager`() {
+    fun nextDelegatesToMusicPlayerManager() {
         viewModel.next()
 
         verify { musicPlayerManager.next() }
     }
 
     @Test
-    fun `previous delegates to MusicPlayerManager`() {
+    fun previousDelegatesToMusicPlayerManager() {
         viewModel.previous()
 
         verify { musicPlayerManager.previous() }
     }
 
     @Test
-    fun `seekTo delegates to MusicPlayerManager`() {
+    fun seekToDelegatesToMusicPlayerManager() {
         viewModel.seekTo(5000L)
 
         verify { musicPlayerManager.seekTo(5000L) }
     }
 
     @Test
-    fun `toggleShuffle delegates to MusicPlayerManager`() {
+    fun toggleShuffleDelegatesToMusicPlayerManager() {
         viewModel.toggleShuffle()
 
         verify { musicPlayerManager.toggleShuffle() }
     }
 
     @Test
-    fun `cycleRepeatMode delegates to MusicPlayerManager`() {
+    fun cycleRepeatModeDelegatesToMusicPlayerManager() {
         viewModel.cycleRepeatMode()
 
         verify { musicPlayerManager.cycleRepeatMode() }
     }
 
     @Test
-    fun `togglePlayPause calls pause when playing`() {
+    fun togglePlayPauseCallsPauseWhenPlaying() {
         playerStateFlow.value = PlayerState(isPlaying = true)
 
         viewModel.togglePlayPause()
@@ -117,7 +117,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `togglePlayPause calls resume when paused`() {
+    fun togglePlayPauseCallsResumeWhenPaused() {
         playerStateFlow.value = PlayerState(isPlaying = false)
 
         viewModel.togglePlayPause()
@@ -126,7 +126,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `playerState reflects MusicPlayerManager state`() {
+    fun playerStateReflectsMusicPlayerManagerState() {
         val song = testSong
         playerStateFlow.value = PlayerState(
             currentSong = song,
@@ -151,7 +151,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `playQueue delegates to MusicPlayerManager with correct parameters`() {
+    fun playQueueDelegatesToMusicPlayerManagerWithCorrectParameters() {
         val songs = listOf(testSong, testSong.copy(id = 2, title = "Song 2"))
 
         viewModel.playQueue(songs, 1)
@@ -160,14 +160,14 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `addToQueue delegates to MusicPlayerManager`() {
+    fun addToQueueDelegatesToMusicPlayerManager() {
         viewModel.addToQueue(testSong)
 
         verify { musicPlayerManager.addToQueue(testSong) }
     }
 
     @Test
-    fun `initial player state is default`() {
+    fun initialPlayerStateIsDefault() {
         val state = viewModel.playerState.value
         assertFalse(state.isPlaying)
         assertEquals(0L, state.currentPosition)
