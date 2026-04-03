@@ -49,11 +49,11 @@ Music playback uses **Media3/ExoPlayer** with background playback support and qu
 ```bash
 # Backend
 cd backend
-cp .env.example .env       # configure DB, Redis, S3, Stripe keys
-docker-compose up -d       # PostgreSQL + Redis
-./gradlew run              # http://localhost:8080
+cp .env.example .env                       # defaults work out of the box
+docker-compose up -d postgres redis        # start PostgreSQL + Redis
+./gradlew run                              # API on http://localhost:8080
 
-# Frontend — open frontend/ in Android Studio, run on emulator
+# Frontend — open frontend/ in Android Studio, run on emulator (connects to 10.0.2.2:8080)
 ```
 
 ## License
