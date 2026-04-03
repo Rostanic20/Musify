@@ -28,7 +28,7 @@ fun ArtistDashboardScreen(
             TopAppBar(
                 title = { Text("Artist Dashboard") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },

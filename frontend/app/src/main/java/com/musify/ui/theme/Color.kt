@@ -25,6 +25,6 @@ val MusifySuccess = Color(0xFF1DB954)
 
 // Light Theme Colors
 val MusifyBackgroundLight = Color(0xFFF5F5F5)
-val MusifySurfaceLight = Color(0xFFFFFFFF)
+val MusifySurfaceLight = Color(0xFFF5F5F5)
 val MusifyTextPrimaryLight = Color(0xFF000000)
 val MusifyTextSecondaryLight = Color(0xFF666666)
