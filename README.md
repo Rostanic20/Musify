@@ -2,6 +2,24 @@
 
 A full-stack music streaming platform I built with Kotlin on both sides — a Ktor REST API serving an Android app built with Jetpack Compose.
 
+## Screenshots
+
+### User
+<p>
+  <img src="screenshots/login.png" width="180" />
+  <img src="screenshots/home.png" width="180" />
+  <img src="screenshots/search.png" width="180" />
+  <img src="screenshots/library.png" width="180" />
+</p>
+
+### Artist
+<p>
+  <img src="screenshots/dashboard.png" width="180" />
+  <img src="screenshots/my_songs.png" width="180" />
+  <img src="screenshots/analytics.png" width="180" />
+  <img src="screenshots/profile.png" width="180" />
+</p>
+
 ## Backend
 
 Built with **Ktor** and structured around clean architecture — controllers handle HTTP, use cases hold business logic, repositories talk to the database through **Exposed ORM**.
