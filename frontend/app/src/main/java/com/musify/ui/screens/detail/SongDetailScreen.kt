@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.musify.domain.entity.Song
 import com.musify.ui.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,16 +72,18 @@ fun SongDetailScreen(
                     }
                 }
                 state.song != null -> {
+                    val song = state.song ?: return@Box
                     SongDetailContent(
-                        songDetails = state.song!!,
+                        song = song,
+                        isFavorite = state.isFavorite,
                         onToggleFavorite = { viewModel.toggleFavorite() },
                         onPlay = { viewModel.playSong() },
                         onAddToQueue = { viewModel.addToQueue() },
                         onArtistClick = {
-                            navController.navigate(Routes.artistDetail(state.song!!.artist.id))
+                            navController.navigate(Routes.artistDetail(song.artist.id))
                         },
                         onAlbumClick = {
-                            state.song!!.album?.let { album ->
+                            song.album?.let { album ->
                                 navController.navigate(Routes.albumDetail(album.id))
                             }
                         }
@@ -93,15 +96,14 @@ fun SongDetailScreen(
 
 @Composable
 private fun SongDetailContent(
-    songDetails: com.musify.data.models.SongDetails,
+    song: Song,
+    isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     onPlay: () -> Unit,
     onAddToQueue: () -> Unit,
     onArtistClick: () -> Unit,
     onAlbumClick: () -> Unit
 ) {
-    val song = songDetails.song
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -111,7 +113,6 @@ private fun SongDetailContent(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Cover art
         Box(
             modifier = Modifier
                 .size(280.dp)
@@ -119,10 +120,10 @@ private fun SongDetailContent(
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            if (song.coverArt != null) {
+            if (song.coverArtUrl != null) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(song.coverArt)
+                        .data(song.coverArtUrl)
                         .crossfade(true)
                         .build(),
                     contentDescription = song.title,
@@ -141,7 +142,6 @@ private fun SongDetailContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Title
         Text(
             text = song.title,
             style = MaterialTheme.typography.headlineMedium,
@@ -152,19 +152,17 @@ private fun SongDetailContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Artist name (tappable)
         Text(
-            text = songDetails.artist.name,
+            text = song.artist.name,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable { onArtistClick() }
         )
 
-        // Album name (tappable)
-        if (songDetails.album != null) {
+        if (song.album != null) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = songDetails.album.title,
+                text = song.album.title,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.clickable { onAlbumClick() }
@@ -173,22 +171,19 @@ private fun SongDetailContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Action buttons row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Favorite
             IconButton(onClick = onToggleFavorite) {
                 Icon(
-                    imageVector = if (songDetails.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = if (songDetails.isFavorite) "Remove from favorites" else "Add to favorites",
-                    tint = if (songDetails.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            // Play button
             FilledIconButton(
                 onClick = onPlay,
                 modifier = Modifier.size(64.dp),
@@ -204,7 +199,6 @@ private fun SongDetailContent(
                 )
             }
 
-            // Add to queue
             IconButton(onClick = onAddToQueue) {
                 Icon(
                     imageVector = Icons.Default.QueueMusic,
@@ -230,7 +224,6 @@ private fun SongDetailContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Song info
         Divider()
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -239,8 +232,8 @@ private fun SongDetailContent(
             SongInfoRow("Genre", song.genre)
         }
         SongInfoRow("Play Count", formatPlayCount(song.playCount))
-        if (songDetails.album != null) {
-            SongInfoRow("Album", songDetails.album.title)
+        if (song.album != null) {
+            SongInfoRow("Album", song.album.title)
         }
 
         Spacer(modifier = Modifier.height(24.dp))

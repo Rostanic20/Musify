@@ -30,7 +30,14 @@ data class Artist(
     val isVerified: Boolean,
     val monthlyListeners: Long,
     val followersCount: Long
-)
+) {
+    val formattedMonthlyListeners: String
+        get() = when {
+            monthlyListeners >= 1_000_000 -> String.format("%.1fM", monthlyListeners / 1_000_000.0)
+            monthlyListeners >= 1_000 -> String.format("%.1fK", monthlyListeners / 1_000.0)
+            else -> monthlyListeners.toString()
+        }
+}
 
 data class Album(
     val id: Int,
@@ -54,4 +61,15 @@ data class Playlist(
     val songCount: Int,
     val totalDurationSeconds: Int,
     val followersCount: Int
-)
+) {
+    val formattedDuration: String
+        get() {
+            val hours = totalDurationSeconds / 3600
+            val minutes = (totalDurationSeconds % 3600) / 60
+            return if (hours > 0) {
+                String.format("%d hr %d min", hours, minutes)
+            } else {
+                String.format("%d min", minutes)
+            }
+        }
+}

@@ -37,7 +37,13 @@ class ArtistSongsViewModel @Inject constructor(
             
             val userResult = getCurrentUserUseCase()
             if (userResult.isSuccess) {
-                val user = userResult.getOrNull()!!
+                val user = userResult.getOrNull() ?: run {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to get user information"
+                    )
+                    return@launch
+                }
                 if (user.isArtist) {
                     val songsResult = getArtistSongsUseCase(user.id)
                     _state.value = _state.value.copy(

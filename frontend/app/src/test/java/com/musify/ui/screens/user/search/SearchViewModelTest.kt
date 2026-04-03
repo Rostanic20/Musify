@@ -1,12 +1,15 @@
 package com.musify.ui.screens.user.search
 
-import com.musify.data.api.MusifyApiService
+import com.musify.data.models.Song
+import com.musify.data.models.Artist
+import com.musify.domain.repository.MusicRepository
+import com.musify.domain.repository.RawSearchResults
+import com.musify.domain.repository.RawTrendingResults
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -19,13 +22,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import retrofit2.Response
 import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchViewModelTest {
 
-    private val apiService = mockk<MusifyApiService>()
+    private val musicRepository = mockk<MusicRepository>()
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
@@ -39,20 +41,16 @@ class SearchViewModelTest {
     }
 
     private fun createViewModel(): SearchViewModel {
-        return SearchViewModel(apiService)
+        return SearchViewModel(musicRepository)
     }
 
     @Test
     fun trendingDataLoadsOnInit() = runTest(testDispatcher) {
-        val trendingResponse = mapOf<String, Any>(
-            "songs" to listOf(
-                mapOf("id" to 1.0, "title" to "Trending Song", "artistName" to "Artist", "duration" to 200.0)
-            ),
-            "artists" to listOf(
-                mapOf("id" to 1.0, "name" to "Trending Artist")
-            )
+        val trendingSong = mockk<Song>(relaxed = true)
+        val trendingArtist = mockk<Artist>(relaxed = true)
+        coEvery { musicRepository.getTrendingRaw(any()) } returns Result.success(
+            RawTrendingResults(songs = listOf(trendingSong), artists = listOf(trendingArtist))
         )
-        coEvery { apiService.getTrending(any(), any()) } returns Response.success(trendingResponse)
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -64,7 +62,7 @@ class SearchViewModelTest {
 
     @Test
     fun trendingLoadFailureSetsErrorMessage() = runTest(testDispatcher) {
-        coEvery { apiService.getTrending(any(), any()) } throws IOException("No connection")
+        coEvery { musicRepository.getTrendingRaw(any()) } returns Result.failure(IOException("No connection"))
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -74,16 +72,13 @@ class SearchViewModelTest {
 
     @Test
     fun searchWithQueryReturnsResults() = runTest(testDispatcher) {
-        coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
-
-        val searchResponse = mapOf<String, Any>(
-            "songs" to listOf(
-                mapOf("id" to 1.0, "title" to "Found Song", "artistName" to "Artist", "duration" to 180.0)
-            ),
-            "artists" to emptyList<Any>(),
-            "albums" to emptyList<Any>()
+        coEvery { musicRepository.getTrendingRaw(any()) } returns Result.success(
+            RawTrendingResults(songs = emptyList(), artists = emptyList())
         )
-        coEvery { apiService.search(any()) } returns Response.success(searchResponse)
+        val foundSong = mockk<Song>(relaxed = true)
+        coEvery { musicRepository.searchRaw(any()) } returns Result.success(
+            RawSearchResults(songs = listOf(foundSong), artists = emptyList(), albums = emptyList())
+        )
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -100,8 +95,12 @@ class SearchViewModelTest {
 
     @Test
     fun searchWithEmptyQueryClearsResultsAndShowsTrending() = runTest(testDispatcher) {
-        coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
-        coEvery { apiService.search(any()) } returns Response.success(emptyMap())
+        coEvery { musicRepository.getTrendingRaw(any()) } returns Result.success(
+            RawTrendingResults(songs = emptyList(), artists = emptyList())
+        )
+        coEvery { musicRepository.searchRaw(any()) } returns Result.success(
+            RawSearchResults(songs = emptyList(), artists = emptyList(), albums = emptyList())
+        )
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -123,8 +122,10 @@ class SearchViewModelTest {
 
     @Test
     fun searchNetworkFailureSetsErrorMessage() = runTest(testDispatcher) {
-        coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
-        coEvery { apiService.search(any()) } throws IOException("Network error")
+        coEvery { musicRepository.getTrendingRaw(any()) } returns Result.success(
+            RawTrendingResults(songs = emptyList(), artists = emptyList())
+        )
+        coEvery { musicRepository.searchRaw(any()) } returns Result.failure(IOException("Network error"))
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -140,9 +141,11 @@ class SearchViewModelTest {
 
     @Test
     fun clearSearchResetsAllSearchState() = runTest(testDispatcher) {
-        coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
-        coEvery { apiService.search(any()) } returns Response.success(
-            mapOf("songs" to emptyList<Any>(), "artists" to emptyList<Any>(), "albums" to emptyList<Any>())
+        coEvery { musicRepository.getTrendingRaw(any()) } returns Result.success(
+            RawTrendingResults(songs = emptyList(), artists = emptyList())
+        )
+        coEvery { musicRepository.searchRaw(any()) } returns Result.success(
+            RawSearchResults(songs = emptyList(), artists = emptyList(), albums = emptyList())
         )
 
         val viewModel = createViewModel()
@@ -166,9 +169,11 @@ class SearchViewModelTest {
 
     @Test
     fun debouncePreventsRapidSearchCalls() = runTest(testDispatcher) {
-        coEvery { apiService.getTrending(any(), any()) } returns Response.success(emptyMap())
-        coEvery { apiService.search(any()) } returns Response.success(
-            mapOf("songs" to emptyList<Any>(), "artists" to emptyList<Any>(), "albums" to emptyList<Any>())
+        coEvery { musicRepository.getTrendingRaw(any()) } returns Result.success(
+            RawTrendingResults(songs = emptyList(), artists = emptyList())
+        )
+        coEvery { musicRepository.searchRaw(any()) } returns Result.success(
+            RawSearchResults(songs = emptyList(), artists = emptyList(), albums = emptyList())
         )
 
         val viewModel = createViewModel()
@@ -182,7 +187,6 @@ class SearchViewModelTest {
         advanceTimeBy(350)
         advanceUntilIdle()
 
-        // distinctUntilChanged + debounce means only "abc" triggers a search
         val state = viewModel.state.value
         assertEquals("abc", state.query)
         assertTrue(state.hasSearched)

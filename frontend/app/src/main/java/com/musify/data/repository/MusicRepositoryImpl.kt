@@ -3,12 +3,19 @@ package com.musify.data.repository
 import com.musify.data.api.MusifyApiService
 import com.musify.data.mapper.SongMapper.toDomainModel
 import com.musify.domain.entity.Album
+import com.musify.domain.entity.Artist
 import com.musify.domain.entity.Song
 import com.musify.domain.exception.NetworkException
 import com.musify.domain.exception.ServerException
 import com.musify.domain.exception.SongNotFoundException
+import com.musify.domain.repository.AlbumDetail
 import com.musify.domain.repository.MusicRepository
+import com.musify.domain.repository.RawSearchResults
+import com.musify.domain.repository.RawTrendingResults
+import com.musify.domain.repository.SearchResults
 import com.musify.domain.repository.SkipResult
+import com.musify.domain.repository.SongDetail
+import com.musify.domain.repository.TrendingResults
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -272,18 +279,8 @@ class MusicRepositoryImpl @Inject constructor(
     }
     
     override suspend fun recordPlay(songId: Int, playedDuration: Int): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = apiService.getStreamUrl(songId)
-                if (response.isSuccessful) {
-                    Result.success(Unit)
-                } else {
-                    Result.success(Unit)
-                }
-            } catch (e: Exception) {
-                Result.success(Unit)
-            }
-        }
+        // Play tracking is handled server-side when the stream URL is requested
+        return Result.success(Unit)
     }
     
     override suspend fun recordSkip(songId: Int, playedDuration: Int): Result<SkipResult> {
@@ -329,7 +326,9 @@ class MusicRepositoryImpl @Inject constructor(
                     if (uploadResponse != null) {
                         val songResponse = apiService.getSongDetails(uploadResponse.songId)
                         if (songResponse.isSuccessful) {
-                            Result.success(songResponse.body()!!.toDomainModel())
+                            val songBody = songResponse.body()
+                                ?: return@withContext Result.failure(ServerException("Failed to parse uploaded song details"))
+                            Result.success(songBody.toDomainModel())
                         } else {
                             Result.failure(ServerException("Failed to fetch uploaded song details"))
                         }
@@ -386,5 +385,399 @@ class MusicRepositoryImpl @Inject constructor(
                 Result.failure(NetworkException(e.message ?: "Network error"))
             }
         }
+    }
+
+    override suspend fun getArtistDetails(artistId: Int): Result<Artist?> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getArtistDetails(artistId)
+                if (response.isSuccessful) {
+                    Result.success(response.body()?.toDomainModel())
+                } else {
+                    Result.failure(ServerException("Failed to fetch artist details"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getArtistAlbums(artistId: Int): Result<List<Album>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getArtistAlbums(artistId)
+                if (response.isSuccessful) {
+                    val albums = response.body()?.map { it.toDomainModel() } ?: emptyList()
+                    Result.success(albums)
+                } else {
+                    Result.failure(ServerException("Failed to fetch artist albums"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getSongDetails(songId: Int): Result<SongDetail?> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getSongDetails(songId)
+                if (response.isSuccessful) {
+                    val details = response.body()
+                    if (details != null) {
+                        Result.success(
+                            SongDetail(
+                                song = details.toDomainModel(),
+                                isFavorite = details.isFavorite
+                            )
+                        )
+                    } else {
+                        Result.failure(ServerException("No song details returned"))
+                    }
+                } else if (response.code() == 404) {
+                    Result.failure(SongNotFoundException())
+                } else {
+                    Result.failure(ServerException("Failed to fetch song details"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getAlbumDetail(albumId: Int): Result<AlbumDetail?> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getAlbumDetails(albumId)
+                if (response.isSuccessful) {
+                    val details = response.body()
+                    if (details != null) {
+                        Result.success(
+                            AlbumDetail(
+                                album = details.album.toDomainModel(),
+                                songs = details.songs.map { it.toDomainModel() }
+                            )
+                        )
+                    } else {
+                        Result.failure(ServerException("No album details returned"))
+                    }
+                } else {
+                    Result.failure(ServerException("Failed to fetch album details"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun searchAll(query: String): Result<SearchResults> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.search(mapOf("query" to query))
+                if (response.isSuccessful) {
+                    val body = response.body() ?: emptyMap()
+                    val gson = com.google.gson.Gson()
+                    val songs = parseSearchList<com.musify.data.models.Song>(gson, body["songs"])
+                        .map { it.toDomainModel() }
+                    val artists = parseSearchList<com.musify.data.models.Artist>(gson, body["artists"])
+                        .map { it.toDomainModel() }
+                    val albums = parseSearchList<com.musify.data.models.Album>(gson, body["albums"])
+                        .map { it.toDomainModel() }
+                    Result.success(SearchResults(songs = songs, artists = artists, albums = albums))
+                } else {
+                    Result.failure(ServerException("Search failed"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getTrending(limit: Int): Result<TrendingResults> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getTrending(limit = limit)
+                if (response.isSuccessful) {
+                    val body = response.body() ?: emptyMap()
+                    val gson = com.google.gson.Gson()
+                    val songs = parseSearchList<com.musify.data.models.Song>(gson, body["songs"])
+                        .map { it.toDomainModel() }
+                    val artists = parseSearchList<com.musify.data.models.Artist>(gson, body["artists"])
+                        .map { it.toDomainModel() }
+                    Result.success(TrendingResults(songs = songs, artists = artists))
+                } else {
+                    Result.failure(ServerException("Failed to load trending"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getLikedSongs(userId: Int, limit: Int, offset: Int): Result<List<Song>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getLikedSongs(userId, limit, offset)
+                if (response.isSuccessful) {
+                    val songs = response.body()?.map { it.toDomainModel() } ?: emptyList()
+                    Result.success(songs)
+                } else {
+                    Result.failure(ServerException("Failed to fetch liked songs"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getFollowedArtists(userId: Int): Result<List<Artist>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getFollowedArtists(userId)
+                if (response.isSuccessful) {
+                    val artists = response.body()?.map { it.toDomainModel() } ?: emptyList()
+                    Result.success(artists)
+                } else {
+                    Result.failure(ServerException("Failed to fetch followed artists"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun searchRaw(query: String): Result<RawSearchResults> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.search(mapOf("query" to query))
+                if (response.isSuccessful) {
+                    val body = response.body() ?: emptyMap()
+                    val gson = com.google.gson.Gson()
+                    val songs = parseSearchList<com.musify.data.models.Song>(gson, body["songs"])
+                    val artists = parseSearchList<com.musify.data.models.Artist>(gson, body["artists"])
+                    val albums = parseSearchList<com.musify.data.models.Album>(gson, body["albums"])
+                    Result.success(RawSearchResults(songs = songs, artists = artists, albums = albums))
+                } else {
+                    Result.failure(ServerException("Search failed"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getTrendingRaw(limit: Int): Result<RawTrendingResults> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getTrending(limit = limit)
+                if (response.isSuccessful) {
+                    val body = response.body() ?: emptyMap()
+                    val gson = com.google.gson.Gson()
+                    val songs = parseSearchList<com.musify.data.models.Song>(gson, body["songs"])
+                    val artists = parseSearchList<com.musify.data.models.Artist>(gson, body["artists"])
+                    Result.success(RawTrendingResults(songs = songs, artists = artists))
+                } else {
+                    Result.failure(ServerException("Failed to load trending"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getCurrentUserPlaylistsRaw(): Result<List<com.musify.data.models.Playlist>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getCurrentUserPlaylists()
+                if (response.isSuccessful) {
+                    Result.success(response.body() ?: emptyList())
+                } else {
+                    Result.failure(ServerException("Failed to fetch playlists"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getFollowedPlaylistsRaw(): Result<List<com.musify.data.models.Playlist>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getFollowedPlaylists()
+                if (response.isSuccessful) {
+                    Result.success(response.body() ?: emptyList())
+                } else {
+                    Result.failure(ServerException("Failed to fetch followed playlists"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getLikedSongsRaw(userId: Int, limit: Int, offset: Int): Result<List<com.musify.data.models.Song>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getLikedSongs(userId, limit, offset)
+                if (response.isSuccessful) {
+                    Result.success(response.body() ?: emptyList())
+                } else {
+                    Result.failure(ServerException("Failed to fetch liked songs"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getFollowedArtistsRaw(userId: Int): Result<List<com.musify.data.models.Artist>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getFollowedArtists(userId)
+                if (response.isSuccessful) {
+                    Result.success(response.body() ?: emptyList())
+                } else {
+                    Result.failure(ServerException("Failed to fetch followed artists"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun createPlaylistRaw(name: String, description: String?, isPublic: Boolean): Result<com.musify.data.models.Playlist> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.createPlaylist(
+                    com.musify.data.models.CreatePlaylistRequest(
+                        name = name,
+                        description = description,
+                        isPublic = isPublic
+                    )
+                )
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(ServerException("Empty response"))
+                } else {
+                    Result.failure(ServerException("Failed to create playlist"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getArtistDetailsRaw(artistId: Int): Result<com.musify.data.models.Artist> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getArtistDetails(artistId)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(ServerException("Empty response"))
+                } else {
+                    Result.failure(ServerException("Failed to fetch artist details"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getArtistSongsRaw(artistId: Int, sort: String, limit: Int): Result<List<com.musify.data.models.Song>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getArtistSongs(artistId, sort = sort, limit = limit)
+                if (response.isSuccessful) {
+                    Result.success(response.body() ?: emptyList())
+                } else {
+                    Result.failure(ServerException("Failed to fetch artist songs"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getArtistAlbumsRaw(artistId: Int): Result<List<com.musify.data.models.Album>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getArtistAlbums(artistId)
+                if (response.isSuccessful) {
+                    Result.success(response.body() ?: emptyList())
+                } else {
+                    Result.failure(ServerException("Failed to fetch artist albums"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun followArtistRaw(artistId: Int): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.followArtist(artistId)
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(ServerException("Failed to follow artist"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun unfollowArtistRaw(artistId: Int): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.unfollowArtist(artistId)
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(ServerException("Failed to unfollow artist"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun getPlaylistDetailsRaw(playlistId: Int): Result<com.musify.data.models.PlaylistDetails> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getPlaylistDetails(playlistId)
+                if (response.isSuccessful) {
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(ServerException("Empty response"))
+                } else {
+                    Result.failure(ServerException("Failed to load playlist"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun removeSongFromPlaylistRaw(playlistId: Int, songId: Int): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.removeSongFromPlaylist(playlistId, songId)
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(ServerException("Failed to remove song from playlist"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    private inline fun <reified T> parseSearchList(gson: com.google.gson.Gson, data: Any?): List<T> {
+        if (data == null) return emptyList()
+        val json = gson.toJson(data)
+        val type = com.google.gson.reflect.TypeToken.getParameterized(List::class.java, T::class.java).type
+        return gson.fromJson(json, type) ?: emptyList()
     }
 }

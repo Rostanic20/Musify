@@ -2,12 +2,10 @@ package com.musify.ui.screens.user.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
 import com.musify.data.models.Album
 import com.musify.data.models.Artist
 import com.musify.data.models.Song
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.musify.domain.repository.MusicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,14 +33,13 @@ data class SearchState(
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val apiService: MusifyApiService
+    private val musicRepository: MusicRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SearchState())
     val state: StateFlow<SearchState> = _state.asStateFlow()
 
     private val _queryFlow = MutableStateFlow("")
-    private val gson = Gson()
 
     init {
         loadTrending()
@@ -91,22 +88,18 @@ class SearchViewModel @Inject constructor(
 
     private fun loadTrending() {
         viewModelScope.launch {
-            try {
-                val response = apiService.getTrending(limit = 10)
-                if (response.isSuccessful) {
-                    val body = response.body() ?: return@launch
-                    val songs = parseList<Song>(body["songs"])
-                    val artists = parseList<Artist>(body["artists"])
+            musicRepository.getTrendingRaw(limit = 10)
+                .onSuccess { trending ->
                     _state.value = _state.value.copy(
-                        trendingSongs = songs,
-                        trendingArtists = artists
+                        trendingSongs = trending.songs,
+                        trendingArtists = trending.artists
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    errorMessage = "Failed to load trending content"
-                )
-            }
+                .onFailure {
+                    _state.value = _state.value.copy(
+                        errorMessage = "Failed to load trending content"
+                    )
+                }
         }
     }
 
@@ -114,44 +107,23 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
-            try {
-                val request = mapOf<String, Any>("query" to query)
-                val response = apiService.search(request)
-
-                if (response.isSuccessful) {
-                    val body = response.body() ?: emptyMap()
-                    val songs = parseList<Song>(body["songs"])
-                    val artists = parseList<Artist>(body["artists"])
-                    val albums = parseList<Album>(body["albums"])
-
+            musicRepository.searchRaw(query)
+                .onSuccess { results ->
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        songs = songs,
-                        artists = artists,
-                        albums = albums,
-                        hasSearched = true
-                    )
-                } else {
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        errorMessage = "Search failed",
+                        songs = results.songs,
+                        artists = results.artists,
+                        albums = results.albums,
                         hasSearched = true
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    errorMessage = "Network error. Please try again.",
-                    hasSearched = true
-                )
-            }
+                .onFailure {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        errorMessage = "Network error. Please try again.",
+                        hasSearched = true
+                    )
+                }
         }
-    }
-
-    private inline fun <reified T> parseList(data: Any?): List<T> {
-        if (data == null) return emptyList()
-        val json = gson.toJson(data)
-        val type = TypeToken.getParameterized(List::class.java, T::class.java).type
-        return gson.fromJson(json, type) ?: emptyList()
     }
 }

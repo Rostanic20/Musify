@@ -3,6 +3,8 @@ package com.musify.ui.screens.artist.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.musify.domain.entity.Song
+import com.musify.domain.repository.AuthRepository
+import com.musify.domain.repository.MusicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +24,8 @@ data class ArtistDashboardState(
 
 @HiltViewModel
 class ArtistDashboardViewModel @Inject constructor(
+    private val musicRepository: MusicRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ArtistDashboardState())
@@ -35,13 +39,21 @@ class ArtistDashboardViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
 
+            val userResult = authRepository.getCurrentUser()
+            val user = userResult.getOrNull()
+            if (user == null) {
+                _state.value = _state.value.copy(isLoading = false, errorMessage = "Failed to load user")
+                return@launch
+            }
+
+            val songsResult = musicRepository.getArtistSongs(user.id)
+            val albumsResult = musicRepository.getArtistAlbums(user.id)
+
             _state.value = _state.value.copy(
                 isLoading = false,
-                totalPlays = 0,
-                followers = 0,
-                songCount = 0,
-                albumCount = 0,
-                recentSongs = emptyList()
+                songCount = songsResult.getOrNull()?.size ?: 0,
+                albumCount = albumsResult.getOrNull()?.size ?: 0,
+                recentSongs = songsResult.getOrNull()?.take(5) ?: emptyList()
             )
         }
     }

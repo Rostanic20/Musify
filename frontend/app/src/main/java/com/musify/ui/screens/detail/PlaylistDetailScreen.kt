@@ -96,7 +96,7 @@ private fun PlaylistDetailContent(
     onSongClick: (Int) -> Unit,
     onRemoveSong: (Int) -> Unit
 ) {
-    val playlist = state.playlist!!
+    val playlist = state.playlist ?: return
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

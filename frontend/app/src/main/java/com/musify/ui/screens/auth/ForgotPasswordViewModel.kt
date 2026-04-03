@@ -2,7 +2,7 @@ package com.musify.ui.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
+import com.musify.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +18,7 @@ data class ForgotPasswordState(
 
 @HiltViewModel
 class ForgotPasswordViewModel @Inject constructor(
-    private val apiService: MusifyApiService
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ForgotPasswordState())
@@ -27,21 +27,15 @@ class ForgotPasswordViewModel @Inject constructor(
     fun requestReset(email: String) {
         viewModelScope.launch {
             _state.value = ForgotPasswordState(isLoading = true)
-            try {
-                val request = mapOf("email" to email)
-                val response = apiService.forgotPassword(request)
-                if (response.isSuccessful) {
+            authRepository.requestPasswordReset(email)
+                .onSuccess {
                     _state.value = ForgotPasswordState(isSuccess = true)
-                } else {
+                }
+                .onFailure { e ->
                     _state.value = ForgotPasswordState(
-                        errorMessage = "Failed to send reset link. Please check your email and try again."
+                        errorMessage = e.message ?: "Failed to send reset link. Please check your email and try again."
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = ForgotPasswordState(
-                    errorMessage = "Network error. Please check your connection and try again."
-                )
-            }
         }
     }
 }

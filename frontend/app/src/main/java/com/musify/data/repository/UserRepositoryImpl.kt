@@ -246,4 +246,34 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getCurrentUserIsPremium(): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getCurrentUser()
+                if (response.isSuccessful) {
+                    Result.success(response.body()?.isPremium == true)
+                } else {
+                    Result.failure(ServerException("Failed to get user"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
+
+    override suspend fun subscribe(plan: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.subscribe(mapOf("plan" to plan))
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(ServerException("Subscription failed"))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException(e.message ?: "Network error"))
+            }
+        }
+    }
 }

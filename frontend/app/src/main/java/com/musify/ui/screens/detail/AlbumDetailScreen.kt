@@ -22,8 +22,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.musify.data.models.AlbumDetails
-import com.musify.data.models.Song
+import com.musify.domain.entity.Album
+import com.musify.domain.entity.Song
 import com.musify.ui.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,15 +71,17 @@ fun AlbumDetailScreen(
                         }
                     }
                 }
-                state.albumDetails != null -> {
+                state.album != null -> {
+                    val album = state.album ?: return@Box
                     AlbumDetailContent(
-                        albumDetails = state.albumDetails!!,
+                        album = album,
+                        songs = state.songs,
                         onPlayAll = { viewModel.playAll() },
                         onSongClick = { songId ->
                             navController.navigate(Routes.songDetail(songId))
                         },
                         onArtistClick = {
-                            navController.navigate(Routes.artistDetail(state.albumDetails!!.album.artistId))
+                            navController.navigate(Routes.artistDetail(album.artist.id))
                         }
                     )
                 }
@@ -90,18 +92,16 @@ fun AlbumDetailScreen(
 
 @Composable
 private fun AlbumDetailContent(
-    albumDetails: AlbumDetails,
+    album: Album,
+    songs: List<Song>,
     onPlayAll: () -> Unit,
     onSongClick: (Int) -> Unit,
     onArtistClick: () -> Unit
 ) {
-    val album = albumDetails.album
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        // Header
         item {
             Column(
                 modifier = Modifier
@@ -111,7 +111,6 @@ private fun AlbumDetailContent(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Cover art
                 Box(
                     modifier = Modifier
                         .size(220.dp)
@@ -119,10 +118,10 @@ private fun AlbumDetailContent(
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (album.coverArt != null) {
+                    if (album.coverArtUrl != null) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(album.coverArt)
+                                .data(album.coverArtUrl)
                                 .crossfade(true)
                                 .build(),
                             contentDescription = album.title,
@@ -152,7 +151,7 @@ private fun AlbumDetailContent(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = album.artistName,
+                    text = album.artist.name,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onArtistClick() }
@@ -161,14 +160,13 @@ private fun AlbumDetailContent(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${album.releaseYear} · ${album.trackCount} songs · ${album.formattedDuration}",
+                    text = "${album.releaseYear} · ${album.trackCount} songs",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Play All button
                 Button(
                     onClick = onPlayAll,
                     modifier = Modifier.fillMaxWidth(),
@@ -188,8 +186,7 @@ private fun AlbumDetailContent(
             }
         }
 
-        // Song list
-        itemsIndexed(albumDetails.songs) { index, song ->
+        itemsIndexed(songs) { index, song ->
             AlbumSongRow(
                 index = index + 1,
                 song = song,
@@ -227,7 +224,7 @@ private fun AlbumSongRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = song.artistName,
+                text = song.artist.name,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

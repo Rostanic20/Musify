@@ -197,7 +197,18 @@ class AuthRepositoryImpl @Inject constructor(
     }
     
     override suspend fun requestPasswordReset(email: String): Result<Unit> {
-        return Result.failure(NotImplementedError("Password reset not yet available"))
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.forgotPassword(mapOf("email" to email))
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(ServerException("Failed to send reset link. Please check your email and try again."))
+                }
+            } catch (e: Exception) {
+                Result.failure(NetworkException("Network error. Please check your connection and try again."))
+            }
+        }
     }
 
     override suspend fun resetPassword(token: String, newPassword: String): Result<Unit> {

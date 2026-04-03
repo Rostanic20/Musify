@@ -38,4 +38,8 @@ interface UserRepository {
     suspend fun getPrivacySettings(): Result<Map<String, Boolean>>
     
     suspend fun updatePrivacySettings(settings: Map<String, Boolean>): Result<Unit>
+
+    suspend fun getCurrentUserIsPremium(): Result<Boolean>
+
+    suspend fun subscribe(plan: String): Result<Unit>
 }

@@ -98,7 +98,7 @@ private fun ArtistDetailContent(
     onSongClick: (Int) -> Unit,
     onAlbumClick: (Int) -> Unit
 ) {
-    val artist = state.artist!!
+    val artist = state.artist ?: return
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),

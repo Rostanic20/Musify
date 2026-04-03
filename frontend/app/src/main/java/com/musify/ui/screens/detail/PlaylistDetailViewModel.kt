@@ -3,9 +3,10 @@ package com.musify.ui.screens.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
 import com.musify.data.models.Playlist
 import com.musify.data.models.Song
+import com.musify.domain.repository.AuthRepository
+import com.musify.domain.repository.MusicRepository
 import com.musify.player.MusicPlayerManager
 import com.musify.player.SongInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,8 @@ data class PlaylistDetailState(
 
 @HiltViewModel
 class PlaylistDetailViewModel @Inject constructor(
-    private val apiService: MusifyApiService,
+    private val musicRepository: MusicRepository,
+    private val authRepository: AuthRepository,
     private val musicPlayerManager: MusicPlayerManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -44,23 +46,22 @@ class PlaylistDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val userResponse = apiService.getCurrentUser()
-                val currentUserId = if (userResponse.isSuccessful) userResponse.body()?.id else null
+                val currentUserId = authRepository.getCurrentUser().getOrNull()?.id
 
-                val response = apiService.getPlaylistDetails(playlistId)
-                if (response.isSuccessful) {
-                    val details = response.body()
-                    _state.update {
-                        it.copy(
-                            playlist = details?.playlist,
-                            songs = details?.songs ?: emptyList(),
-                            currentUserId = currentUserId,
-                            isLoading = false
-                        )
+                musicRepository.getPlaylistDetailsRaw(playlistId)
+                    .onSuccess { details ->
+                        _state.update {
+                            it.copy(
+                                playlist = details.playlist,
+                                songs = details.songs,
+                                currentUserId = currentUserId,
+                                isLoading = false
+                            )
+                        }
                     }
-                } else {
-                    _state.update { it.copy(error = "Failed to load playlist", isLoading = false) }
-                }
+                    .onFailure {
+                        _state.update { it.copy(error = "Failed to load playlist", isLoading = false) }
+                    }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message ?: "Unknown error", isLoading = false) }
             }
@@ -69,9 +70,8 @@ class PlaylistDetailViewModel @Inject constructor(
 
     fun removeSong(songId: Int) {
         viewModelScope.launch {
-            try {
-                val response = apiService.removeSongFromPlaylist(playlistId, songId)
-                if (response.isSuccessful) {
+            musicRepository.removeSongFromPlaylistRaw(playlistId, songId)
+                .onSuccess {
                     _state.update { current ->
                         current.copy(
                             songs = current.songs.filter { it.id != songId },
@@ -81,7 +81,6 @@ class PlaylistDetailViewModel @Inject constructor(
                         )
                     }
                 }
-            } catch (_: Exception) { }
         }
     }
 

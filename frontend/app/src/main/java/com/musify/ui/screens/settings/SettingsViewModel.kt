@@ -3,7 +3,7 @@ package com.musify.ui.screens.settings
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
+import com.musify.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +36,7 @@ enum class AudioQuality(val label: String) {
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val apiService: MusifyApiService,
+    private val userRepository: UserRepository,
     private val application: Application
 ) : ViewModel() {
 
@@ -63,30 +63,19 @@ class SettingsViewModel @Inject constructor(
                 passwordChangeSuccess = false
             )
 
-            try {
-                val request = mapOf(
-                    "currentPassword" to currentPassword,
-                    "newPassword" to newPassword
-                )
-                val response = apiService.changePassword(request)
-
-                if (response.isSuccessful) {
+            userRepository.changePassword(currentPassword, newPassword)
+                .onSuccess {
                     _state.value = _state.value.copy(
                         isChangingPassword = false,
                         passwordChangeSuccess = true
                     )
-                } else {
+                }
+                .onFailure {
                     _state.value = _state.value.copy(
                         isChangingPassword = false,
-                        passwordChangeError = "Failed to change password"
+                        passwordChangeError = it.message ?: "Failed to change password"
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isChangingPassword = false,
-                    passwordChangeError = "Network error. Please try again."
-                )
-            }
         }
     }
 
@@ -104,27 +93,19 @@ class SettingsViewModel @Inject constructor(
                 deleteAccountError = null
             )
 
-            try {
-                val request = mapOf("password" to password)
-                val response = apiService.deleteAccount(request)
-
-                if (response.isSuccessful) {
+            userRepository.deleteAccount(password)
+                .onSuccess {
                     _state.value = _state.value.copy(
                         isDeletingAccount = false,
                         deleteAccountSuccess = true
                     )
-                } else {
+                }
+                .onFailure {
                     _state.value = _state.value.copy(
                         isDeletingAccount = false,
-                        deleteAccountError = "Failed to delete account"
+                        deleteAccountError = it.message ?: "Failed to delete account"
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isDeletingAccount = false,
-                    deleteAccountError = "Network error. Please try again."
-                )
-            }
         }
     }
 

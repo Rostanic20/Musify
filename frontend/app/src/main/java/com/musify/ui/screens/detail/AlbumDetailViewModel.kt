@@ -3,9 +3,9 @@ package com.musify.ui.screens.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
-import com.musify.data.models.AlbumDetails
-import com.musify.data.models.Song
+import com.musify.domain.entity.Album
+import com.musify.domain.entity.Song
+import com.musify.domain.repository.MusicRepository
 import com.musify.player.MusicPlayerManager
 import com.musify.player.SongInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,13 +18,14 @@ import javax.inject.Inject
 
 data class AlbumDetailState(
     val isLoading: Boolean = false,
-    val albumDetails: AlbumDetails? = null,
+    val album: Album? = null,
+    val songs: List<Song> = emptyList(),
     val error: String? = null
 )
 
 @HiltViewModel
 class AlbumDetailViewModel @Inject constructor(
-    private val apiService: MusifyApiService,
+    private val musicRepository: MusicRepository,
     private val musicPlayerManager: MusicPlayerManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -41,21 +42,22 @@ class AlbumDetailViewModel @Inject constructor(
     private fun loadAlbumDetails() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            try {
-                val response = apiService.getAlbumDetails(albumId)
-                if (response.isSuccessful) {
-                    _state.update { it.copy(albumDetails = response.body(), isLoading = false) }
-                } else {
-                    _state.update { it.copy(error = "Failed to load album details", isLoading = false) }
+            musicRepository.getAlbumDetail(albumId)
+                .onSuccess { detail ->
+                    if (detail != null) {
+                        _state.update { it.copy(album = detail.album, songs = detail.songs, isLoading = false) }
+                    } else {
+                        _state.update { it.copy(error = "Album not found", isLoading = false) }
+                    }
                 }
-            } catch (e: Exception) {
-                _state.update { it.copy(error = e.message ?: "Unknown error", isLoading = false) }
-            }
+                .onFailure { e ->
+                    _state.update { it.copy(error = e.message ?: "Unknown error", isLoading = false) }
+                }
         }
     }
 
     fun playAll() {
-        val songs = _state.value.albumDetails?.songs ?: return
+        val songs = _state.value.songs
         if (songs.isEmpty()) return
         musicPlayerManager.playQueue(songs.map { it.toSongInfo() }, 0)
     }
@@ -63,10 +65,10 @@ class AlbumDetailViewModel @Inject constructor(
     private fun Song.toSongInfo() = SongInfo(
         id = id,
         title = title,
-        artistName = artistName,
-        coverArt = coverArt,
-        streamUrl = streamUrl,
-        duration = duration
+        artistName = artist.name,
+        coverArt = coverArtUrl,
+        streamUrl = null,
+        duration = durationSeconds
     )
 
     fun retry() {

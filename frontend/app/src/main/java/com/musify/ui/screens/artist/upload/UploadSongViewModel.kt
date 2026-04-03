@@ -53,7 +53,13 @@ class UploadSongViewModel @Inject constructor(
                     return@launch
                 }
                 
-                val user = userResult.getOrNull()!!
+                val user = userResult.getOrNull() ?: run {
+                    _state.value = _state.value.copy(
+                        isUploading = false,
+                        errorMessage = "Failed to get user information"
+                    )
+                    return@launch
+                }
                 if (!user.isArtist) {
                     _state.value = _state.value.copy(
                         isUploading = false,
@@ -80,7 +86,13 @@ class UploadSongViewModel @Inject constructor(
                 )
                 
                 if (uploadResult.isSuccess) {
-                    val song = uploadResult.getOrNull()!!
+                    val song = uploadResult.getOrNull() ?: run {
+                        _state.value = _state.value.copy(
+                            isUploading = false,
+                            errorMessage = "Upload succeeded but failed to parse response"
+                        )
+                        return@launch
+                    }
                     _state.value = _state.value.copy(uploadProgress = 0.7f)
                     
                     if (!coverArtPath.isNullOrBlank()) {

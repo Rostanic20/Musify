@@ -2,7 +2,7 @@ package com.musify.ui.screens.subscription
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
+import com.musify.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ enum class SubscriptionPlan(val label: String, val price: String, val period: St
 
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
-    private val apiService: MusifyApiService
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SubscriptionState())
@@ -39,20 +39,16 @@ class SubscriptionViewModel @Inject constructor(
     private fun loadCurrentSubscription() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            try {
-                val userResponse = apiService.getCurrentUser()
-                if (userResponse.isSuccessful) {
-                    val user = userResponse.body()
+            userRepository.getCurrentUserIsPremium()
+                .onSuccess { isPremium ->
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        isPremium = user?.isPremium == true
+                        isPremium = isPremium
                     )
-                } else {
-                    _state.value = _state.value.copy(isLoading = false)
                 }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(isLoading = false, errorMessage = "Network error. Please try again.")
-            }
+                .onFailure {
+                    _state.value = _state.value.copy(isLoading = false, errorMessage = "Network error. Please try again.")
+                }
         }
     }
 
@@ -64,25 +60,20 @@ class SubscriptionViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isSubscribing = true, errorMessage = null)
 
-            try {
-                val request = mapOf("plan" to _state.value.selectedPlan.name.lowercase())
-                val response = apiService.subscribe(request)
-
-                if (response.isSuccessful) {
+            userRepository.subscribe(_state.value.selectedPlan.name.lowercase())
+                .onSuccess {
                     _state.value = _state.value.copy(
                         isSubscribing = false,
                         subscribeSuccess = true,
                         isPremium = true
                     )
-                } else {
+                }
+                .onFailure {
                     _state.value = _state.value.copy(
                         isSubscribing = false,
                         errorMessage = "Subscription failed. Please try again."
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(isSubscribing = false, errorMessage = "Network error. Please try again.")
-            }
         }
     }
 }

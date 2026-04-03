@@ -2,11 +2,11 @@ package com.musify.ui.screens.user.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
 import com.musify.data.models.Artist
-import com.musify.data.models.CreatePlaylistRequest
 import com.musify.data.models.Playlist
 import com.musify.data.models.Song
+import com.musify.domain.repository.AuthRepository
+import com.musify.domain.repository.MusicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -34,7 +34,8 @@ enum class LibraryTab {
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val apiService: MusifyApiService
+    private val authRepository: AuthRepository,
+    private val musicRepository: MusicRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LibraryState())
@@ -47,10 +48,10 @@ class LibraryViewModel @Inject constructor(
     private fun loadCurrentUser() {
         viewModelScope.launch {
             try {
-                val response = apiService.getCurrentUser()
-                if (response.isSuccessful) {
-                    val user = response.body()
-                    _state.value = _state.value.copy(userId = user?.id)
+                val userResult = authRepository.getCurrentUser()
+                val user = userResult.getOrNull()
+                if (user != null) {
+                    _state.value = _state.value.copy(userId = user.id)
                     loadLibraryContent()
                 } else {
                     _state.value = _state.value.copy(
@@ -69,13 +70,13 @@ class LibraryViewModel @Inject constructor(
 
             try {
                 coroutineScope {
-                    val playlistsDeferred = async { apiService.getCurrentUserPlaylists() }
-                    val followedPlaylistsDeferred = async { apiService.getFollowedPlaylists() }
+                    val playlistsDeferred = async { musicRepository.getCurrentUserPlaylistsRaw() }
+                    val followedPlaylistsDeferred = async { musicRepository.getFollowedPlaylistsRaw() }
                     val likedSongsDeferred = async {
-                        _state.value.userId?.let { apiService.getLikedSongs(it) }
+                        _state.value.userId?.let { musicRepository.getLikedSongsRaw(it) }
                     }
                     val artistsDeferred = async {
-                        _state.value.userId?.let { apiService.getFollowedArtists(it) }
+                        _state.value.userId?.let { musicRepository.getFollowedArtistsRaw(it) }
                     }
 
                     val playlistsResult = playlistsDeferred.await()
@@ -85,14 +86,10 @@ class LibraryViewModel @Inject constructor(
 
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        playlists = if (playlistsResult.isSuccessful)
-                            playlistsResult.body() ?: emptyList() else emptyList(),
-                        followedPlaylists = if (followedPlaylistsResult.isSuccessful)
-                            followedPlaylistsResult.body() ?: emptyList() else emptyList(),
-                        likedSongs = if (likedSongsResult?.isSuccessful == true)
-                            likedSongsResult.body() ?: emptyList() else emptyList(),
-                        followedArtists = if (artistsResult?.isSuccessful == true)
-                            artistsResult.body() ?: emptyList() else emptyList()
+                        playlists = playlistsResult.getOrDefault(emptyList()),
+                        followedPlaylists = followedPlaylistsResult.getOrDefault(emptyList()),
+                        likedSongs = likedSongsResult?.getOrDefault(emptyList()) ?: emptyList(),
+                        followedArtists = artistsResult?.getOrDefault(emptyList()) ?: emptyList()
                     )
                 }
             } catch (e: Exception) {
@@ -108,33 +105,19 @@ class LibraryViewModel @Inject constructor(
     fun createPlaylist(name: String, description: String?, isPublic: Boolean) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isCreatingPlaylist = true)
-            try {
-                val request = CreatePlaylistRequest(
-                    name = name,
-                    description = description,
-                    isPublic = isPublic
-                )
-                val response = apiService.createPlaylist(request)
-                if (response.isSuccessful) {
-                    val newPlaylist = response.body()
-                    if (newPlaylist != null) {
-                        _state.value = _state.value.copy(
-                            playlists = listOf(newPlaylist) + _state.value.playlists,
-                            isCreatingPlaylist = false
-                        )
-                    }
-                } else {
+            musicRepository.createPlaylistRaw(name, description, isPublic)
+                .onSuccess { newPlaylist ->
+                    _state.value = _state.value.copy(
+                        playlists = listOf(newPlaylist) + _state.value.playlists,
+                        isCreatingPlaylist = false
+                    )
+                }
+                .onFailure {
                     _state.value = _state.value.copy(
                         isCreatingPlaylist = false,
                         errorMessage = "Failed to create playlist"
                     )
                 }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isCreatingPlaylist = false,
-                    errorMessage = "Network error. Please try again."
-                )
-            }
         }
     }
 

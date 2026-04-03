@@ -3,10 +3,10 @@ package com.musify.ui.screens.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.musify.data.api.MusifyApiService
 import com.musify.data.models.Album
 import com.musify.data.models.Artist
 import com.musify.data.models.Song
+import com.musify.domain.repository.MusicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -28,7 +28,7 @@ data class ArtistDetailState(
 
 @HiltViewModel
 class ArtistDetailViewModel @Inject constructor(
-    private val apiService: MusifyApiService,
+    private val musicRepository: MusicRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -46,20 +46,20 @@ class ArtistDetailViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 coroutineScope {
-                    val artistDeferred = async { apiService.getArtistDetails(artistId) }
-                    val songsDeferred = async { apiService.getArtistSongs(artistId, sort = "popular", limit = 10) }
-                    val albumsDeferred = async { apiService.getArtistAlbums(artistId) }
+                    val artistDeferred = async { musicRepository.getArtistDetailsRaw(artistId) }
+                    val songsDeferred = async { musicRepository.getArtistSongsRaw(artistId, sort = "popular", limit = 10) }
+                    val albumsDeferred = async { musicRepository.getArtistAlbumsRaw(artistId) }
 
-                    val artistResponse = artistDeferred.await()
-                    val songsResponse = songsDeferred.await()
-                    val albumsResponse = albumsDeferred.await()
+                    val artistResult = artistDeferred.await()
+                    val songsResult = songsDeferred.await()
+                    val albumsResult = albumsDeferred.await()
 
-                    if (artistResponse.isSuccessful) {
+                    if (artistResult.isSuccess) {
                         _state.update {
                             it.copy(
-                                artist = artistResponse.body(),
-                                songs = songsResponse.body() ?: emptyList(),
-                                albums = albumsResponse.body() ?: emptyList(),
+                                artist = artistResult.getOrNull(),
+                                songs = songsResult.getOrDefault(emptyList()),
+                                albums = albumsResult.getOrDefault(emptyList()),
                                 isLoading = false
                             )
                         }
@@ -76,12 +76,12 @@ class ArtistDetailViewModel @Inject constructor(
     fun toggleFollow() {
         viewModelScope.launch {
             try {
-                val response = if (_state.value.isFollowing) {
-                    apiService.unfollowArtist(artistId)
+                val result = if (_state.value.isFollowing) {
+                    musicRepository.unfollowArtistRaw(artistId)
                 } else {
-                    apiService.followArtist(artistId)
+                    musicRepository.followArtistRaw(artistId)
                 }
-                if (response.isSuccessful) {
+                if (result.isSuccess) {
                     _state.update { current ->
                         val delta = if (current.isFollowing) -1 else 1
                         current.copy(
