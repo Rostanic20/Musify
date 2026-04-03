@@ -33,13 +33,7 @@ interface PlaylistRepository {
     suspend fun addSongToPlaylist(playlistId: Int, songId: Int): Result<Unit>
     
     suspend fun removeSongFromPlaylist(playlistId: Int, songId: Int): Result<Unit>
-    
-    suspend fun reorderPlaylistSongs(
-        playlistId: Int,
-        fromPosition: Int,
-        toPosition: Int
-    ): Result<Unit>
-    
+
     suspend fun followPlaylist(playlistId: Int): Result<Unit>
     
     suspend fun unfollowPlaylist(playlistId: Int): Result<Unit>

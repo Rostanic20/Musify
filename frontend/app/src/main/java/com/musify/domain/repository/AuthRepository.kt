@@ -37,12 +37,4 @@ interface AuthRepository {
     suspend fun resendVerificationSMS(phoneNumber: String): Result<Unit>
     
     suspend fun requestPasswordReset(email: String): Result<Unit>
-    
-    suspend fun resetPassword(token: String, newPassword: String): Result<Unit>
-    
-    suspend fun enable2FA(password: String): Result<Pair<String, String>>
-    
-    suspend fun disable2FA(totpCode: String): Result<Unit>
-    
-    suspend fun verify2FA(totpCode: String): Result<Unit>
 }

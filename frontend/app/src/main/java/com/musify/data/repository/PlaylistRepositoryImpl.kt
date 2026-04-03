@@ -227,20 +227,6 @@ class PlaylistRepositoryImpl @Inject constructor(
         }
     }
     
-    override suspend fun reorderPlaylistSongs(
-        playlistId: Int,
-        fromPosition: Int,
-        toPosition: Int
-    ): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
-                Result.failure(NotImplementedError("Playlist reordering not yet available"))
-            } catch (e: Exception) {
-                Result.failure(NetworkException(e.message ?: "Network error"))
-            }
-        }
-    }
-    
     override fun getFollowedPlaylists(): Flow<List<Playlist>> {
         return flow {
             try {

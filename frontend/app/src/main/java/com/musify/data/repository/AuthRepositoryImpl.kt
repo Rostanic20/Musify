@@ -211,22 +211,6 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun resetPassword(token: String, newPassword: String): Result<Unit> {
-        return Result.failure(NotImplementedError("Password reset not yet available"))
-    }
-
-    override suspend fun enable2FA(password: String): Result<Pair<String, String>> {
-        return Result.failure(NotImplementedError("Two-factor authentication not yet available"))
-    }
-
-    override suspend fun disable2FA(totpCode: String): Result<Unit> {
-        return Result.failure(NotImplementedError("Two-factor authentication not yet available"))
-    }
-
-    override suspend fun verify2FA(totpCode: String): Result<Unit> {
-        return Result.failure(NotImplementedError("Two-factor authentication not yet available"))
-    }
-    
     private fun handleErrorResponse(code: Int, errorBody: String?): DomainException {
         val errorMessage = try {
             com.google.gson.Gson().fromJson(errorBody, ErrorResponse::class.java).error
